@@ -74,6 +74,9 @@ class Agent:
                 return [self.get_system_message()] + messages[-i:]
         return [self.get_system_message()] + messages
 
+    def add_system_message(self, content):
+        self.messages.append({"role": "system", "content": content})
+
     def add_user_message(self, content, name=None):
         if name is not None:
             self.messages.append({"role": "user", "content": content, "name": name})
@@ -82,20 +85,20 @@ class Agent:
 
     def add_agent_message(self, content):
         self.messages.append(
-            {"role": "assistant", "content": content, "name": self.character.name}
+            {"role": "assistant", "content": content}
         )
 
-    def reply(self, text, stream=False):
+    def reply(self, text, stream=False, user_name=None):
         if text == "":
             raise ValueError("Text cannot be empty.")
 
-        self.add_user_message(text)
+        self.add_user_message(text, user_name)
         messages = self.get_messages_in_token_limit()
 
         response = self.agent.chat.completions.create(
             model=self.model,
             messages=messages,
-            max_tokens=1024,
+            max_tokens=512,
             stream=stream,
         )
 
