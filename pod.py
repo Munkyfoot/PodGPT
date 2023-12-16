@@ -24,7 +24,7 @@ class Pod:
 
     def start(self):
         for a in self.hosts:
-            a.character.description = f"{a.character.description} You are a host of {self.title}. {self.description}. Today's episode is about {self.topic}. Your co-hosts are {', '.join([host.character.name for host in self.hosts if host != a])}. Your guests are {', '.join([guest.character.name for guest in self.guests])}. Keep your responses short and entertaining to keep the conversation going! You should only speak as {a.character.name} and you do not need to say your name before speaking."
+            a.character.description = f"{a.character.description} You are a host of {self.title}. {self.description}. Today's episode is about {self.topic}. Your co-hosts are {', '.join([host.character.name for host in self.hosts if host != a])}. Your guests are {', '.join([guest.character.name for guest in self.guests])}. Keep your responses short and entertaining to keep the conversation going! Do not speak for other characters."
 
         prompt_message = {
             "content": "Let's start the show in 5... 4... 3... 2... 1...",
@@ -96,11 +96,19 @@ if __name__ == "__main__":
         )
     )
 
+    guest_a = Agent(
+        Character(
+            name="Mia",
+            description="Mia is an AI created to answer questions about the world. She is a very intelligent and witty person who loves to make jokes and have fun. She is also very caring and compassionate towards others.",
+            voice_name="nova",
+        )
+    )
+
     pod = Pod(
         title="The AI Podcast",
         description="A podcast about AI.",
         topic="AI",
         hosts=[host_a, host_b],
-        guests=[],
+        guests=[guest_a],
     )
     pod.start()
