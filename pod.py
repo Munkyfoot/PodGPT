@@ -1,6 +1,6 @@
 import random
 
-# import threading
+import threading
 import time
 from typing import List
 
@@ -54,19 +54,19 @@ class Pod:
                 if len(response_text.split(speak_split)) > 1:
                     sentence = response_text.split(speak_split)[0] + speak_split
                     sentence = sentence.strip()
-                    speaker.speak(sentence)
-                    # speak_thread = threading.Thread(
-                    #    target=agent.speak, args=(sentence,)
-                    # )
-                    # speak_thread.start()
+                    # speaker.speak(sentence)
+                    speak_thread = threading.Thread(
+                        target=speaker.speak, args=(sentence,)
+                    )
+                    speak_thread.start()
                     response_text = response_text.split(speak_split)[1].strip()
             print()
             if response_text != "":
-                speaker.speak(response_text)
-                # speak_thread = threading.Thread(
-                #    target=agent.speak, args=(response_text,)
-                # )
-                # speak_thread.start()
+                # speaker.speak(response_text)
+                speak_thread = threading.Thread(
+                    target=speaker.speak, args=(response_text,)
+                )
+                speak_thread.start()
 
             while speaker.speaking:
                 time.sleep(0.1)
