@@ -117,10 +117,20 @@ if __name__ == "__main__":
         )
     )
 
+    cusomize_response = input("Do you want to customize the podcast? (y/[n])")
+    if cusomize_response == "y":
+        title = input("Title: ")
+        description = input("Description: ")
+        topic = input("Episode Topic: ")
+    else:
+        title = "The AI Podcast"
+        description = "A podcast about AI."
+        topic = "AI"
+
     pod = Pod(
-        title="The AI Podcast",
-        description="A podcast about AI.",
-        topic="AI",
+        title=title,
+        description=description,
+        topic=topic,
         hosts=[host_a, host_b],
         guests=[guest_a],
     )
