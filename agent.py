@@ -3,18 +3,28 @@ import os
 from io import BytesIO
 from time import time
 from enum import Enum
+from typing import Literal
 
 import pyaudio
 import tiktoken
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydub import AudioSegment
+from dataclasses import dataclass
 
 load_dotenv()
 
 
+@dataclass
+class Character:
+    name: str
+    description: str
+    voice_name: Literal["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+
+
 class Agent:
-    def __init__(self):
+    def __init__(self, character: Character):
+        self.character = character
         self.agent = OpenAI(
             api_key=os.getenv("OPENAI_API_KEY"),
         )
@@ -26,6 +36,12 @@ class Agent:
         self.speaking = False
         self.speak_prompt_queue = []
         self.speak_audio_queue = []
+
+    def get_system_message(self):
+        return {
+            "role": "system",
+            "content": f"You are {self.character.name}. {self.character.description}",
+        }
 
     def get_message_token_usage(self, message):
         role_tokens = 3
@@ -41,34 +57,39 @@ class Agent:
         return total_tokens
 
     def get_total_token_usage(self, messages):
-        total_tokens = 0
+        total_tokens = self.get_message_token_usage(self.get_system_message())
         for message in messages:
             total_tokens += self.get_message_token_usage(message)
         return total_tokens
 
     def get_messages_in_token_limit(self):
         messages = self.messages.copy()
-        token_usage = 0
+        token_usage = self.get_message_token_usage(self.get_system_message())
         for i in range(len(messages)):
             token_usage += self.get_message_token_usage(messages[-(i + 1)])
             if token_usage > self.token_limit:
                 print(
                     f"In-context Tokens: {self.get_total_token_usage(messages[-i:])} / {self.token_limit}. Total Tokens: {self.get_total_token_usage(messages)}"
                 )
-                return messages[-i:]
-        return messages
+                return [self.get_system_message()] + messages[-i:]
+        return [self.get_system_message()] + messages
 
-    def add_message(self, role, content, name=None):
+    def add_user_message(self, content, name=None):
         if name is not None:
-            self.messages.append({"role": role, "content": content, "name": name})
+            self.messages.append({"role": "user", "content": content, "name": name})
         else:
-            self.messages.append({"role": role, "content": content})
+            self.messages.append({"role": "user", "content": content})
+
+    def add_agent_message(self, content):
+        self.messages.append(
+            {"role": "assistant", "content": content, "name": self.character.name}
+        )
 
     def reply(self, text, stream=False):
         if text == "":
             raise ValueError("Text cannot be empty.")
 
-        self.add_message("user", text)
+        self.add_user_message(text)
         messages = self.get_messages_in_token_limit()
 
         response = self.agent.chat.completions.create(
@@ -84,13 +105,13 @@ class Agent:
                 if chunk.choices[0].delta.content is not None:
                     response_text += chunk.choices[0].delta.content
                     yield chunk.choices[0].delta.content
-            self.add_message("assistant", response_text)
+            self.add_agent_message(response_text)
         else:
-            self.add_message("assistant", response.choices[0].message.content)
+            self.add_agent_message(response.choices[0].message.content)
             return response.choices[0].message.content
 
     def describe(self, encoded_image, query="What is in this image?"):
-        self.add_message("user", f"{query} [Image]")
+        self.add_user_message(f"{query} [Image]")
         response = self.agent.chat.completions.create(
             model="gpt-4-vision-preview",
             messages=[
@@ -111,7 +132,7 @@ class Agent:
         )
 
         try:
-            self.add_message("assistant", response.choices[0].message.content)
+            self.add_agent_message(response.choices[0].message.content)
             return response.choices[0].message.content
         except:
             return "Something went wrong."
@@ -128,7 +149,7 @@ class Agent:
 
         response = self.agent.audio.speech.create(
             model="tts-1",
-            voice="shimmer",
+            voice=self.character.voice_name,
             input=text,
             response_format="opus",
         )

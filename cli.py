@@ -1,8 +1,13 @@
 import threading
-from agent import Agent
+from agent import Agent, Character
 
 if __name__ == "__main__":
-    agent = Agent()
+    agent_character = Character(
+        name="Sandra",
+        description="Sandra is a sassy, sarcastic and hilarious character. She is a very intelligent and witty person who loves to make jokes and have fun. She is also very caring and compassionate towards others.",
+        voice_name="shimmer",
+    )
+    agent = Agent(agent_character)
     while True:
         message = input("You: ")
         response = agent.reply(message, True)
