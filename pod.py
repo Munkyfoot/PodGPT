@@ -75,9 +75,22 @@ class Pod:
                 "content": full_response_text,
                 "name": speaker.character.name,
             }
-            speaker = random.choice(
-                [a for a in (self.hosts + self.guests) if a != speaker]
-            )
+            words = full_response_text.split(" ")
+            random_speaker = True
+            for word in reversed(words):
+                if word in [a.character.name for a in (self.hosts + self.guests)]:
+                    speaker = [
+                        a
+                        for a in (self.hosts + self.guests)
+                        if a.character.name == word
+                    ][0]
+                    random_speaker = False
+                    break
+
+            if random_speaker:
+                speaker = random.choice(
+                    [a for a in (self.hosts + self.guests) if a != speaker]
+                )
 
 
 if __name__ == "__main__":
