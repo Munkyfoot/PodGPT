@@ -24,11 +24,21 @@ class Pod:
         self.guests = guests
 
     def start(self):
+        guest_text = (
+            f"Your guests are {', '.join([guest.character.name for guest in self.guests])}. "
+            if len(self.guests) > 0
+            else "There are no guests on this episode. "
+        )
         for a in self.hosts:
-            a.character.description = f"{a.character.description} You are a host of {self.title}. {self.description}. Today's episode is about {self.topic}. Your co-hosts are {', '.join([host.character.name for host in self.hosts if host != a])}. Your guests are {', '.join([guest.character.name for guest in self.guests])}. Keep your responses short and entertaining to keep the conversation going! Do not speak for other characters."
+            a.character.description = f"{a.character.description} You are a host of {self.title}. {self.description}. Today's episode is about {self.topic}. Your co-hosts are {', '.join([host.character.name for host in self.hosts if host != a])}. {guest_text} Keep your responses short and entertaining to keep the conversation going! Do not speak for other characters."
 
         for a in self.guests:
-            a.character.description = f"{a.character.description} You are a guest of {self.title}. {self.description}. Today's episode is about {self.topic}. The hosts of the podcast are {', '.join([host.character.name for host in self.hosts])}. The other guests are {', '.join([guest.character.name for guest in self.guests if guest != a])}. Keep your responses short and entertaining to keep the conversation going! Do not speak for other characters."
+            guest_text = (
+                f"The other guests are {', '.join([guest.character.name for guest in self.guests if guest != a])}. "
+                if len(self.guests) > 1
+                else ""
+            )
+            a.character.description = f"{a.character.description} You are a guest of {self.title}. {self.description}. Today's episode is about {self.topic}. The hosts of the podcast are {', '.join([host.character.name for host in self.hosts])}. {guest_text}Keep your responses short and entertaining to keep the conversation going! Do not speak for other characters."
 
         names = [a.character.name.lower() for a in (self.hosts + self.guests)]
 
@@ -86,6 +96,8 @@ class Pod:
                 re.sub(r"[^a-zA-Z]", "", word).lower()
                 for word in words
                 if re.sub(r"[^a-zA-Z]", "", word).lower() in names
+                and re.sub(r"[^a-zA-Z]", "", word).lower()
+                != speaker.character.name.lower()
             ]
 
             if len(mentioned_names) > 0:

@@ -84,9 +84,7 @@ class Agent:
             self.messages.append({"role": "user", "content": content})
 
     def add_agent_message(self, content):
-        self.messages.append(
-            {"role": "assistant", "content": content}
-        )
+        self.messages.append({"role": "assistant", "content": content})
 
     def reply(self, text, stream=False, user_name=None):
         if text == "":
