@@ -1,4 +1,5 @@
 import random
+import re
 
 import threading
 import time
@@ -25,6 +26,11 @@ class Pod:
     def start(self):
         for a in self.hosts:
             a.character.description = f"{a.character.description} You are a host of {self.title}. {self.description}. Today's episode is about {self.topic}. Your co-hosts are {', '.join([host.character.name for host in self.hosts if host != a])}. Your guests are {', '.join([guest.character.name for guest in self.guests])}. Keep your responses short and entertaining to keep the conversation going! Do not speak for other characters."
+
+        for a in self.guests:
+            a.character.description = f"{a.character.description} You are a guest of {self.title}. {self.description}. Today's episode is about {self.topic}. The hosts of the podcast are {', '.join([host.character.name for host in self.hosts])}. The other guests are {', '.join([guest.character.name for guest in self.guests if guest != a])}. Keep your responses short and entertaining to keep the conversation going! Do not speak for other characters."
+
+        names = [a.character.name.lower() for a in (self.hosts + self.guests)]
 
         prompt_message = {
             "content": "Let's start the show in 5... 4... 3... 2... 1...",
@@ -76,18 +82,19 @@ class Pod:
                 "name": speaker.character.name,
             }
             words = full_response_text.split(" ")
-            random_speaker = True
-            for word in reversed(words):
-                if word in [a.character.name for a in (self.hosts + self.guests)]:
-                    speaker = [
-                        a
-                        for a in (self.hosts + self.guests)
-                        if a.character.name == word
-                    ][0]
-                    random_speaker = False
-                    break
+            mentioned_names = [
+                re.sub(r"[^a-zA-Z]", "", word).lower()
+                for word in words
+                if re.sub(r"[^a-zA-Z]", "", word).lower() in names
+            ]
 
-            if random_speaker:
+            if len(mentioned_names) > 0:
+                speaker = [
+                    a
+                    for a in (self.hosts + self.guests)
+                    if a.character.name.lower() == mentioned_names[-1]
+                ][0]
+            else:
                 speaker = random.choice(
                     [a for a in (self.hosts + self.guests) if a != speaker]
                 )
