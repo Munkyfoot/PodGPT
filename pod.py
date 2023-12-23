@@ -66,7 +66,7 @@ class Pod:
                 full_response_text += chunk
                 response_text += chunk
                 print(chunk, end="", flush=True)
-                speak_split = "\n" if speaker.speaking else "."
+                speak_split = "\n\n" if speaker.speaking else "\n"
                 if len(response_text.split(speak_split)) > 1:
                     sentence = response_text.split(speak_split)[0] + speak_split
                     sentence = sentence.strip()
@@ -113,44 +113,112 @@ class Pod:
 
 
 if __name__ == "__main__":
-    host_a = Agent(
-        Character(
-            name="Sandra",
-            description="Sandra is a sassy, sarcastic and hilarious character. She is a very intelligent and witty person who loves to make jokes and have fun. She is also very caring and compassionate towards others.",
-            voice_name="shimmer",
-        )
-    )
-    host_b = Agent(
-        Character(
-            name="Xan",
-            description="Xan is an intelligent, witty, and sarcastic character. He is a very intelligent and witty person who loves to make jokes and have fun. He is also very caring and compassionate towards others.",
-            voice_name="echo",
-        )
-    )
-
-    guest_a = Agent(
-        Character(
-            name="Mia",
-            description="Mia is an AI created to answer questions about the world. She is a very intelligent and witty person who loves to make jokes and have fun. She is also very caring and compassionate towards others.",
-            voice_name="nova",
-        )
-    )
-
     cusomize_response = input("Do you want to customize the podcast? (y/[n])")
     if cusomize_response == "y":
         title = input("Title: ")
         description = input("Description: ")
         topic = input("Episode Topic: ")
+        hosts = []
+        while input("Add a host? (y/[n])") == "y":
+            host_name = input("Host Name: ")
+            host_description = input("Host Description: ")
+            host_voice = ""
+            while host_voice not in [
+                "alloy",
+                "echo",
+                "fable",
+                "onyx",
+                "nova",
+                "shimmer",
+            ]:
+                host_voice = input(
+                    "Host Voice ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']: "
+                )
+                if host_voice not in [
+                    "alloy",
+                    "echo",
+                    "fable",
+                    "onyx",
+                    "nova",
+                    "shimmer",
+                ]:
+                    print("Invalid voice name. Please try again.")
+            host = Agent(
+                Character(
+                    name=host_name.strip().capitalize().split(" ")[0],
+                    description=host_description.strip(),
+                    voice_name=host_voice,
+                )
+            )
+            hosts.append(host)
+        guests = []
+        while input("Add a guest? (y/[n])") == "y":
+            guest_name = input("Guest Name: ")
+            guest_description = input("Guest Description: ")
+            guest_voice = ""
+            while guest_voice not in [
+                "alloy",
+                "echo",
+                "fable",
+                "onyx",
+                "nova",
+                "shimmer",
+            ]:
+                guest_voice = input(
+                    "Guest Voice ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']: "
+                )
+                if guest_voice not in [
+                    "alloy",
+                    "echo",
+                    "fable",
+                    "onyx",
+                    "nova",
+                    "shimmer",
+                ]:
+                    print("Invalid voice name. Please try again.")
+            guest = Agent(
+                Character(
+                    name=guest_name.strip().capitalize(),
+                    description=guest_description.strip(),
+                    voice_name=guest_voice,
+                )
+            )
+            guests.append(guest)
     else:
         title = "The AI Podcast"
-        description = "A podcast about AI."
+        description = "A podcast where an AI hosts debates between AI guests."
         topic = "AI"
+        hosts = [
+            Agent(
+                Character(
+                    name="Alloy",
+                    description="Alloy is very balanced about AI and serves as a moderator.",
+                    voice_name="alloy",
+                )
+            )
+        ]
+        guests = [
+            Agent(
+                Character(
+                    name="Echo",
+                    description="Echo is very optimistic about AI.",
+                    voice_name="echo",
+                )
+            ),
+            Agent(
+                Character(
+                    name="Fable",
+                    description="Fable is very pessimistic about AI.",
+                    voice_name="fable",
+                )
+            ),
+        ]
 
     pod = Pod(
         title=title,
         description=description,
         topic=topic,
-        hosts=[host_a, host_b],
-        guests=[guest_a],
+        hosts=hosts,
+        guests=guests,
     )
     pod.start()
