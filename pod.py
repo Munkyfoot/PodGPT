@@ -55,10 +55,15 @@ class Pod:
                 if a != speaker and a.character.name != prompt_message["name"]
             ]:
                 a.add_user_message(prompt_message["content"], prompt_message["name"])
-            print(f"[{speaker.character.name} replying to {prompt_message['name']}]")
             response = speaker.reply(
                 prompt_message["content"], True, prompt_message["name"]
             )
+            while (
+                any([a.speaking for a in (self.hosts + self.guests)])
+                or len(speaker.speak_prompt_queue) > 0
+            ):
+                time.sleep(0.1)
+            print(f"[{speaker.character.name} replying to {prompt_message['name']}]")
             print(f"{speaker.character.name}: ", end="", flush=True)
             full_response_text = ""
             response_text = ""
@@ -66,16 +71,17 @@ class Pod:
                 full_response_text += chunk
                 response_text += chunk
                 print(chunk, end="", flush=True)
-                speak_split = "\n\n" if speaker.speaking else "\n"
-                if len(response_text.split(speak_split)) > 1:
-                    sentence = response_text.split(speak_split)[0] + speak_split
-                    sentence = sentence.strip()
-                    # speaker.speak(sentence)
+                speak_split = ["...", ".", "?", "!", "\n"]
+                if (
+                    any([s in chunk for s in speak_split])
+                    and response_text.strip() != ""
+                ):
+                    sentence = response_text.strip()
                     speak_thread = threading.Thread(
                         target=speaker.speak, args=(sentence,)
                     )
                     speak_thread.start()
-                    response_text = response_text.split(speak_split)[1].strip()
+                    response_text = ""
             print()
             if response_text != "":
                 # speaker.speak(response_text)
@@ -83,9 +89,6 @@ class Pod:
                     target=speaker.speak, args=(response_text,)
                 )
                 speak_thread.start()
-
-            while speaker.speaking:
-                time.sleep(0.1)
 
             prompt_message = {
                 "content": full_response_text,
