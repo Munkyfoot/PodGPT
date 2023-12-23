@@ -35,7 +35,6 @@ class Agent:
 
         self.speaking = False
         self.speak_prompt_queue = []
-        self.speak_audio_queue = []
 
     def get_system_message(self):
         return {
@@ -111,49 +110,16 @@ class Agent:
             self.add_agent_message(response.choices[0].message.content)
             return response.choices[0].message.content
 
-    def describe(self, encoded_image, query="What is in this image?"):
-        self.add_user_message(f"{query} [Image]")
-        response = self.agent.chat.completions.create(
-            model="gpt-4-vision-preview",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": query},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/png;base64,{encoded_image}",
-                            },
-                        },
-                    ],
-                }
-            ],
-            max_tokens=512,
-        )
-
-        try:
-            self.add_agent_message(response.choices[0].message.content)
-            return response.choices[0].message.content
-        except:
-            return "Something went wrong."
-
     def speak(self, text):
         if text == "":
             raise ValueError("Text cannot be empty.")
 
+        self.speak_prompt_queue.append(text)
+
         if self.speaking:
-            self.speak_prompt_queue.append(text)
             return
         else:
             self.speaking = True
-
-        response = self.agent.audio.speech.create(
-            model="tts-1",
-            voice=self.character.voice_name,
-            input=text,
-            response_format="opus",
-        )
 
         p = pyaudio.PyAudio()
 
@@ -164,8 +130,19 @@ class Agent:
             output=True,
         )
 
-        for chunk in response.iter_bytes():
-            stream.write(AudioSegment.from_file(BytesIO(chunk), format="ogg").raw_data)
+        while len(self.speak_prompt_queue) > 0:
+            text = self.speak_prompt_queue.pop(0)
+            response = self.agent.audio.speech.create(
+                model="tts-1",
+                voice=self.character.voice_name,
+                input=text,
+                response_format="opus",
+            )
+
+            for chunk in response.iter_bytes():
+                stream.write(
+                    AudioSegment.from_file(BytesIO(chunk), format="ogg").raw_data
+                )
 
         stream.stop_stream()
         stream.close()
@@ -173,21 +150,3 @@ class Agent:
         p.terminate()
 
         self.speaking = False
-
-        if len(self.speak_prompt_queue) > 0:
-            self.speak(self.speak_prompt_queue.pop(0))
-
-    def generate_image(self, text) -> str:
-        if text == "":
-            raise ValueError("Text cannot be empty.")
-
-        response = self.agent.images.generate(
-            model="dall-e-3",
-            prompt=text,
-            size="1024x1024",
-            quality="standard",
-            n=1,
-            response_format="b64_json",
-        )
-
-        return response.data[0].b64_json
