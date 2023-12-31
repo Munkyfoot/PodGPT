@@ -1,8 +1,6 @@
-import asyncio
 import os
+from dataclasses import dataclass
 from io import BytesIO
-from time import time
-from enum import Enum
 from typing import Literal
 
 import pyaudio
@@ -10,7 +8,6 @@ import tiktoken
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydub import AudioSegment
-from dataclasses import dataclass
 
 load_dotenv()
 

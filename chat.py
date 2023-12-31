@@ -1,4 +1,5 @@
 import threading
+
 from agent import Agent, Character
 
 if __name__ == "__main__":
