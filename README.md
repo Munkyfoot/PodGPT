@@ -6,8 +6,9 @@ A simple command line tool to generate an infinitely streaming podcast using Ope
 
 1. Clone this repository
 2. Install the requirements: `pip install -r requirements.txt`
-3. Copy `.env.example` to `.env` and fill in the values
+3. Install [ffmpeg](https://ffmpeg.org/download.html)
+4. Copy `.env.example` to `.env` and fill in the values
 
 ## Usage
 
-Run `python pod.py` and follow the prompts to generate a podcast.
+Run `python pod.py` and follow the prompts to generate a podcast. To stop the podcast, press `Ctrl+C`.
